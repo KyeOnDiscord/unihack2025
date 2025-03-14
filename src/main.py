@@ -48,6 +48,7 @@ def _import_routers() -> None:
 
 # Don't use if __name__ == "__main__": here.
 # Can't use `fastapi` command otherwise.
+_log.setLevel(logging.DEBUG)
 _get_config()
 _import_routers()
 
