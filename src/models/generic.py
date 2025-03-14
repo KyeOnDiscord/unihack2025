@@ -1,4 +1,4 @@
-from typing import override
+from typing import override, Self
 from pydantic import BaseModel
 
 __all__ = [
@@ -17,7 +17,7 @@ class DBRecord(BaseModel):
         dump["_id"] = self.id
 
         return dump
-    
+
     @override
     def model_dump_json(self, *args, **kwargs) -> str:
         kwargs["exclude"] = kwargs.get("exclude", []) + ["id"]
@@ -26,3 +26,12 @@ class DBRecord(BaseModel):
         dump["_id"] = self.id
 
         return dump
+    
+    @override
+    @classmethod
+    def model_validate(cls, *args, **kwargs) -> Self:
+        kwargs["obj"] = (args[0] if len(args) > 0 else kwargs.get("obj", {}))
+
+        kwargs["obj"]["id"] = kwargs["obj"].pop("_id")
+
+        return super().model_validate(**kwargs)

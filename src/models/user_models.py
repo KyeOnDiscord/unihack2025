@@ -5,7 +5,8 @@ from .generic import DBRecord
 
 
 class UserDto(DBRecord):
-    id: int
+    id: str
     name: str
     email: str
-    password_hash: str
+    hashed_password: str
+    disabled: bool = False
