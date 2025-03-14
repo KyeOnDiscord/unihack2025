@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+    from astrapy import AsyncDatabase
 
     from models.config_models import AppConfigDto
 
@@ -15,3 +16,4 @@ INTERFACE_API_KEY: str = os.getenv("INTERFACE_API_KEY")
 
 app: FastAPI = None
 app_config: AppConfigDto = None
+db: AsyncDatabase = None

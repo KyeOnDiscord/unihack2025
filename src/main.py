@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from typing import TYPE_CHECKING
 
 import config
+from modules.db import get_db
 
 if TYPE_CHECKING:
     from fastapi import APIRouter
@@ -56,5 +57,7 @@ def _import_routers() -> None:
 _log.setLevel(logging.DEBUG)
 _get_config()
 _import_routers()
+
+config.db = get_db(os.getenv("ASTRA_DB_APPLICATION_ENDPOINT"))
 
 _log.info("App initialized")
