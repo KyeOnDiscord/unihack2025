@@ -42,6 +42,8 @@ def _import_routers() -> None:
             router: APIRouter = getattr(module, "router")
             app.include_router(router)
             _log.info(f"Included router: {filename[:-3]}")
+        else:
+            _log.warning(f"Router {filename} does not have a router object")
 
 
 # Don't use if __name__ == "__main__": here.
