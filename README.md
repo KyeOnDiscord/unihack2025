@@ -17,6 +17,7 @@ People can put their hobbies and interests on their profile, and AI can suggest 
 - Easily test any endpoints at http://127.0.0.1:8000/docs 
 - Use `_log.debug`, `_log.info`, `_log.warning`, `_log.error` and `log.exception` for permanent logging (can use `print` for quick debugging). Especially check out how to use `log.exception` in try except catches.
 - If you are importing something for the sake of type hinting ONLY, import it under `if TYPE_CHECKING` from `from typing import TYPE_CHECKING`.
+- Install `pip install ruff` and run `ruff format` to format all files. Can optionally also install the VSCode Ruff linter.
 
 ## Importing order
 (Create an empty new line after each group of imports)
