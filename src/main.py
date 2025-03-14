@@ -26,10 +26,13 @@ ROUTERS_DIR = os.path.join(BASE_DIR, "web", "routers")
 
 def _get_config() -> None:
     if not os.path.exists(APP_CONFIG_DIR):
-        raise FileNotFoundError(f"App config file not found. Should be at {APP_CONFIG_DIR}")
+        raise FileNotFoundError(
+            f"App config file not found. Should be at {APP_CONFIG_DIR}"
+        )
 
     with open(APP_CONFIG_DIR, "r") as f:
         config.app_config = yaml.safe_load(f)
+
 
 def _import_routers() -> None:
     for filename in os.listdir(ROUTERS_DIR):
@@ -37,7 +40,9 @@ def _import_routers() -> None:
             continue
 
         relative_dir = ROUTERS_DIR.replace(BASE_DIR, "")[1:]
-        module = importlib.import_module(f"{relative_dir.replace('\\', '.')}.{filename[:-3]}")
+        module = importlib.import_module(
+            f"{relative_dir.replace('\\', '.')}.{filename[:-3]}"
+        )
         if hasattr(module, "router"):
             router: APIRouter = getattr(module, "router")
             app.include_router(router)
