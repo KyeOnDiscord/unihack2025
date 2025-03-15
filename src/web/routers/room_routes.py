@@ -148,3 +148,13 @@ async def get_room_calenders(room_id: str) -> dict:
         "schedules": user_calendars,
         "free_times": free_times,
     }
+
+@router.get("/my-rooms")
+async def get_user_rooms(
+    current_user: Annotated[UserDto, Depends(get_current_active_user)]
+) -> dict:
+    room_collection = await config.db.get_collection(CollectionRef.ROOMS)
+    rooms = []
+    async for room in room_collection.find({"users": current_user.id}):
+        rooms.append(room)
+    return {"message": "User rooms fetched", "rooms": rooms}
