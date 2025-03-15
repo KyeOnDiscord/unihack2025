@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime
 import logging
 import random
+import string
 import uuid
 from typing import Annotated
 
@@ -47,19 +48,21 @@ async def create_room(
 
     room.id = str(uuid.uuid4())
     room.users = [current_user.id]
+    room.owner_id = current_user.id
+    room.room_code = "".join(random.choices(string.digits, k=6))
     await room_collection.insert_one(room.model_dump())
     _log.info(f"Room {room.id} created")
 
-    return {"message": "Room created", "room": room, "owner_id": current_user.id}
+    return {"message": "Room created", "room": room.model_dump()}
 
 
-@router.post("/{room_id}/join")
+@router.post("/{room_code}/join")
 async def join_room(
     current_user: Annotated[UserDto, Depends(get_current_active_user)],
-    room_id: str,
+    room_code: str,
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ROOM_CODE: room_code}))
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -67,18 +70,21 @@ async def join_room(
         )
 
     if current_user.id in room.users:
-        return HTTPException(status.HTTP_400_BAD_REQUEST, detail="User already in room")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="User already in room")
 
     if len(room.users) >= MAX_USERS_PER_ROOM:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Room is full (max 10 users)",
         )
+    
+    room.users.append(current_user.id)
+
     await room_collection.update_one(
         {RoomRef.ID: room.id}, {"$push": {"users": current_user.id}}
     )
 
-    return {"message": "User added to room"}
+    return {"message": "User added to room", "room": room.model_dump()}
 
 
 @router.post("/{room_id}/leave")
@@ -114,7 +120,7 @@ async def leave_room(
         {RoomRef.ID: room_id}, {"$set": room.model_dump_safe()}
     )
 
-    return {"message": "User removed from room"}
+    return {"message": "User removed from room", "room": room.model_dump()}
 
 
 @router.get("/{room_id}/calenders")
@@ -224,6 +230,7 @@ async def get_room_calenders(
 
     return {
         "message": "Schedules synced",
+        "room": room.model_dump(),
         "schedules": user_calendars,
         "free_times": free_times,
     }

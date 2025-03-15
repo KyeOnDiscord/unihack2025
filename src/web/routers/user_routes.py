@@ -72,6 +72,7 @@ def decode_url_safe_token(token: str):
 @router.post("/")
 async def register_user(user: UserDto) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
+    user.email = user.email.lower()
     user.id = str(uuid.uuid4())  # UUID4 will always be unique
     # if await user_collection.find_one({UserRef.ID: user.id}):
     #     raise HTTPException(

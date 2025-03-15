@@ -8,5 +8,6 @@ from typing import Optional, List
 class RoomDto(DBRecord):
     id: Optional[str] = None
     name: str
-    owner_id: str
+    room_code: Optional[str] = None
+    owner_id: Optional[str] = None
     users: List[str] = []

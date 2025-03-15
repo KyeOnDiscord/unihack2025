@@ -52,7 +52,7 @@ async def reset_password(
 
     hashed_password = get_password_hash(form_data.password)
     await user_collection.update_one(
-        {UserRef.ID: form_data.username},
+        {UserRef.ID: user.id},
         {"$set": {UserRef.HASHED_PASSWORD: hashed_password}},
     )
 
