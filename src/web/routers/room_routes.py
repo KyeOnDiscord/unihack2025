@@ -91,9 +91,7 @@ async def leave_room(
             detail="User not in room",
         )
     room["users"].remove(current_user.id)
-    await room_collection.replace_one(
-        {RoomRef.ID: room_id}, room
-    )
+    await room_collection.replace_one({RoomRef.ID: room_id}, room)
     return {"message": "User removed from room"}
 
 
@@ -116,7 +114,7 @@ async def get_room_calenders(room_id: str) -> dict:
             return
         elif not user.calender_ics_link:
             return
-        
+
         calender = Calendar(user.calender_ics_link)
         await calender.fetch_calendar()
 
@@ -127,10 +125,10 @@ async def get_room_calenders(room_id: str) -> dict:
                     "summary": event.summary,
                     "start_time_iso": event.start_time.timestamp(),
                     "end_time_iso": event.end_time.timestamp(),
-                    "duration_seconds": event.duration.seconds
+                    "duration_seconds": event.duration.seconds,
                 }
                 for event in calender.events
-            ]
+            ],
         }
 
     fetch_tasks = []
@@ -139,7 +137,7 @@ async def get_room_calenders(room_id: str) -> dict:
 
     await asyncio.gather(*fetch_tasks)
 
-    free_times = {} # Keep it the same structure as calender_events above.
+    free_times = {}  # Keep it the same structure as calender_events above.
     for calender in user_calendars.values():
         ...
 
@@ -149,9 +147,10 @@ async def get_room_calenders(room_id: str) -> dict:
         "free_times": free_times,
     }
 
+
 @router.get("/my-rooms")
 async def get_user_rooms(
-    current_user: Annotated[UserDto, Depends(get_current_active_user)]
+    current_user: Annotated[UserDto, Depends(get_current_active_user)],
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
     rooms = []

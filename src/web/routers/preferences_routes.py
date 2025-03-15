@@ -25,6 +25,8 @@ async def save_preferences(
     user_collection = await config.db.get_collection(CollectionRef.USERS)
 
     current_user.preferences = preferences
-    await user_collection.update_one({UserRef.ID: current_user.id}, {"$set": current_user.model_dump_safe()})
+    await user_collection.update_one(
+        {UserRef.ID: current_user.id}, {"$set": current_user.model_dump_safe()}
+    )
 
     return {"message": "Preferences saved"}

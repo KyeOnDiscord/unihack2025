@@ -17,7 +17,7 @@ from modules.db import CollectionRef, UserRef
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 43800 # one month
+ACCESS_TOKEN_EXPIRE_MINUTES = 43800  # one month
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
