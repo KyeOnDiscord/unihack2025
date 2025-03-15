@@ -8,7 +8,6 @@ import string
 import uuid
 from typing import Annotated
 from groq import Groq
-from collections import Counter
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 

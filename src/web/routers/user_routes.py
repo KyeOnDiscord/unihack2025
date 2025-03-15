@@ -131,3 +131,4 @@ async def verify_user(token:str):
             )
 
             return {"message": "User email has been successfully verified"}
+    
