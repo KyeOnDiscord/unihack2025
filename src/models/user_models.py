@@ -12,4 +12,5 @@ class UserDto(DBRecord):
     calender_ics_link: Optional[str] = None
     preferences: Optional[str] = None
     hashed_password: Optional[str] = None
+    account_verified: bool = False
     disabled: bool = False
