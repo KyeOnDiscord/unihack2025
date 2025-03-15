@@ -1,5 +1,6 @@
 # Handle creating rooms, getting room info, getting room code, getting users to
 # join groups by code, etc.
+import asyncio
 import logging
 import uuid
 from typing import Annotated
@@ -10,7 +11,8 @@ import config
 from models.room_models import RoomDto
 from models.user_models import UserDto
 from modules.db import CollectionRef, RoomRef
-from web.user_auth import get_current_active_user
+from modules.ical import Calendar
+from web.user_auth import get_current_active_user, get_user
 
 _log = logging.getLogger("uvicorn")
 router = APIRouter(
@@ -95,19 +97,54 @@ async def leave_room(
     return {"message": "User removed from room"}
 
 
-@router.get("/{room_id}/sync")
-async def sync_calendars(room_id: str) -> dict:
+@router.get("/{room_id}/calenders")
+async def get_room_calenders(room_id: str) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    user_collection = await config.db.get_collection(CollectionRef.USERS)
     room = await room_collection.find_one({RoomRef.ID: room_id})
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
-    user_calendars = []
+
+    user_calendars = {}
+
+    async def fetch_user_calender(user_id: str) -> None:
+        user = await get_user(user_id)
+
+        if not user:
+            return
+        elif not user.calender_ics_link:
+            return
+        
+        calender = Calendar(user.calender_ics_link)
+        await calender.fetch_calendar()
+
+        user_calendars[user.id] = {
+            "user": user.model_dump(),
+            "calender_events": [
+                {
+                    "summary": event.summary,
+                    "start_time_iso": event.start_time.timestamp(),
+                    "end_time_iso": event.end_time.timestamp(),
+                    "duration_seconds": event.duration.seconds
+                }
+                for event in calender.events
+            ]
+        }
+
+    fetch_tasks = []
     for user_id in room.get("users", []):
-        user = await user_collection.find_one({"id": user_id}, {"calendar": 1})
-        if user and "calender" in user:
-            user_calendars.append(user["calendar"])
-        return {"message": "Schedules synced", "schedules": user_calendars}
+        fetch_tasks.append(fetch_user_calender(user_id))
+
+    await asyncio.gather(*fetch_tasks)
+
+    free_times = {} # Keep it the same structure as calender_events above.
+    for calender in user_calendars.values():
+        ...
+
+    return {
+        "message": "Schedules synced",
+        "schedules": user_calendars,
+        "free_times": free_times,
+    }

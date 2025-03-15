@@ -9,6 +9,13 @@ __all__ = [
 class DBRecord(BaseModel):
     id: int
 
+    def model_dump_safe(self, *args, **kwargs) -> dict:
+        kwargs["exclude"] = kwargs.get("exclude", []) + ["id"]
+
+        dump = super().model_dump(*args, **kwargs)
+
+        return dump
+
     @override
     def model_dump(self, *args, **kwargs) -> dict:
         kwargs["exclude"] = kwargs.get("exclude", []) + ["id"]

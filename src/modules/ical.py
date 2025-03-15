@@ -26,13 +26,13 @@ class Calendar:
         async with aiohttp.ClientSession() as session:
             resp = await session.get(self._URL)
         
-        if resp.status == 200:
-            self._calendar = icalendar.Calendar.from_ical(await resp.text())
-            self.events.clear()  # Clear the events to put the new ones in
-            for event in self._calendar.events:
-                self.events.append(Event(event))
-        else:
-            raise ValueError(f"Could not get calendar, HTTP Error {resp.status}")
+            if resp.status == 200:
+                self._calendar = icalendar.Calendar.from_ical(await resp.text())
+                self.events.clear()  # Clear the events to put the new ones in
+                for event in self._calendar.events:
+                    self.events.append(Event(event))
+            else:
+                raise ValueError(f"Could not get calendar, HTTP Error {resp.status}")
 
 
 
