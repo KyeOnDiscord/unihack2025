@@ -100,7 +100,7 @@ async def leave_room(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
-    elif current_user.id not in room.get("users", []):
+    elif current_user.id not in room.users:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User not in room",
