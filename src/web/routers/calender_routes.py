@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-
+import requests
 import config
 from modules.ical import Calendar
 from modules.db import CollectionRef, UserRef
@@ -24,14 +24,22 @@ async def save_calender(
     current_user: Annotated[UserDto, Depends(get_current_active_user)],
     calender_ics_link: str,
 ) -> dict:
-    user_collection = await config.db.get_collection(CollectionRef.USERS)
+    
+    cal_resp = requests.get(calender_ics_link)
+    if cal_resp.ok and len(cal_resp.text) > 10:
+        user_collection = await config.db.get_collection(CollectionRef.USERS)
 
-    current_user.calender_ics_link = calender_ics_link
-    await user_collection.update_one(
-        {UserRef.ID: current_user.id}, {"$set": current_user.model_dump_safe()}
-    )
+        current_user.calender_ics_link = calender_ics_link
+        await user_collection.update_one(
+            {UserRef.ID: current_user.id}, {"$set": current_user.model_dump_safe()}
+        )
 
-    return {"message": "Calender saved"}
+        return {"message": "Calender saved"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Calendar URL was not valid!",
+        )
 
 @router.get("/")
 async def get_calender(
