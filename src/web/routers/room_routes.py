@@ -257,16 +257,8 @@ async def get_user_rooms(
 
 @router.get("{room_id}/preference")
 async def get_common_interests(
-    room_id: str
+    user_ids: dict, event_time: str
 ) -> dict:
-    room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
-    if room is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Room not found",
-        )
-    
     user_interests = {}
     users = {}
 
@@ -276,7 +268,7 @@ async def get_common_interests(
         if user and user.preferences:
             user_interests[user.id] = user.preferences
     
-    fetch_tasks = [fetch_user_preferences(user_id) for user_id in room.users]
+    fetch_tasks = [fetch_user_preferences(user_id) for user_id in user_ids]
     await asyncio.gather(*fetch_tasks)
 
     all_interests = [interest for interests in user_interests.values() for interest in interests]
@@ -291,7 +283,7 @@ async def get_common_interests(
         messages=[
             {
                 "role": "user",
-                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy this activity for a group of individuals: {chosen_interest}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
+                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy this activity for a group of individuals: {chosen_interest} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
             }
         ],
         model="llama-3.3-70b-versatile",
