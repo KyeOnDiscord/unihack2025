@@ -65,13 +65,10 @@ async def join_room(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
-    
+
     if current_user.id in room.users:
-        return HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            detail="User already in room"
-        )
-    
+        return HTTPException(status.HTTP_400_BAD_REQUEST, detail="User already in room")
+
     if len(room.users) >= MAX_USERS_PER_ROOM:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -102,7 +99,7 @@ async def leave_room(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User not in room",
         )
-    
+
     room.users.remove(current_user.id)
     if room.owner_id == current_user.id:
         if len(room.users) > 0:
@@ -113,15 +110,16 @@ async def leave_room(
 
             return {"message": "User left room & room deleted"}
 
-    await room_collection.update_one({RoomRef.ID: room_id}, {'$set': room.model_dump_safe()})
+    await room_collection.update_one(
+        {RoomRef.ID: room_id}, {"$set": room.model_dump_safe()}
+    )
 
     return {"message": "User removed from room"}
 
 
 @router.get("/{room_id}/calenders")
 async def get_room_calenders(
-    current_user: Annotated[UserDto, Depends(get_current_active_user)],
-    room_id: str
+    current_user: Annotated[UserDto, Depends(get_current_active_user)], room_id: str
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
     room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
@@ -171,15 +169,19 @@ async def get_room_calenders(
     start_end_times = []
     for user_id, calender in user_calendars.items():
         for event in calender["calender_events"]:
-            start_end_times.append({
-                "user_id": user_id,
-                "type": "start",
-                "time": datetime.fromtimestamp(event["start_time_iso"])}
+            start_end_times.append(
+                {
+                    "user_id": user_id,
+                    "type": "start",
+                    "time": datetime.fromtimestamp(event["start_time_iso"]),
+                }
             )
-            start_end_times.append({
-                "user_id": user_id,
-                "type": "end",
-                "time": datetime.fromtimestamp(event["end_time_iso"])}
+            start_end_times.append(
+                {
+                    "user_id": user_id,
+                    "type": "end",
+                    "time": datetime.fromtimestamp(event["end_time_iso"]),
+                }
             )
 
     start_end_times.sort(key=lambda x: (x["time"], 1 if x["type"] == "start" else 0))
@@ -196,27 +198,29 @@ async def get_room_calenders(
             if start_end["user_id"] in current_free_users:
                 i = current_free_users.index(start_end["user_id"])
                 current_free_users.pop(i)
-        
+
         free_times_by_time[start_end["time"].timestamp()] = current_free_users.copy()
 
     free_times_order = sorted(free_times_by_time.keys())
 
-    free_times = [] # Same format as calender_events
+    free_times = []  # Same format as calender_events
     for i, time_ in enumerate(free_times_order[:-1]):
         free_users = free_times_by_time[time_]
         if len(free_users) < 2:
             continue
 
         start_time = datetime.fromtimestamp(time_)
-        end_time = datetime.fromtimestamp(free_times_order[i+1])
+        end_time = datetime.fromtimestamp(free_times_order[i + 1])
 
-        free_times.append({
-            "summary": "Free time",
-            "start_time_iso": start_time,
-            "end_time_iso": end_time,
-            "duration_seconds": (start_time - end_time).seconds,
-            "free_users": free_users
-        })
+        free_times.append(
+            {
+                "summary": "Free time",
+                "start_time_iso": start_time,
+                "end_time_iso": end_time,
+                "duration_seconds": (start_time - end_time).seconds,
+                "free_users": free_users,
+            }
+        )
 
     return {
         "message": "Schedules synced",

@@ -1,26 +1,18 @@
+import os
 import logging
 import random
 import string
 import uuid
-import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
-
-import jwt
-import os
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-
-from web.user_auth import get_user
+from itsdangerous import URLSafeTimedSerializer
+from modules.mail import mail, create_message
 
 import config
 from models.user_models import UserDto
 from modules.db import CollectionRef, UserRef
 from web.auth import require_api_key
-from web.user_auth import get_password_hash
-
-from itsdangerous import URLSafeTimedSerializer
-from modules.mail import mail, create_message
+from web.user_auth import get_user, get_password_hash
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
@@ -57,16 +49,15 @@ async def get_user_by_email(email: str) -> dict:
     else:
         return user
 
-serializer = URLSafeTimedSerializer(
-    secret_key=SECRET_KEY, salt="email-verification"
-)
+
+serializer = URLSafeTimedSerializer(secret_key=SECRET_KEY, salt="email-verification")
+
 
 def create_url_safe_token(data: dict):
-
-
     token = serializer.dumps(data)
 
     return token
+
 
 def decode_url_safe_token(token: str):
     try:
@@ -88,7 +79,6 @@ async def register_user(user: UserDto) -> dict:
     #         detail="User with the same id already exists",
     #     )
 
-
     if await user_collection.find_one({UserRef.EMAIL: user.email}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -98,8 +88,8 @@ async def register_user(user: UserDto) -> dict:
     random_password = "".join(random.choices(string.ascii_letters, k=32))
     user.hashed_password = get_password_hash(random_password)
 
-        # send the email verification to the user
-        #user.email
+    # send the email verification to the user
+    # user.email
     token = create_url_safe_token({"email": user.email})
     link = "http://localhost:3003/verify/" + token
     html_messsage = f"""
@@ -121,17 +111,20 @@ async def register_user(user: UserDto) -> dict:
 
     return {"message": "User created", "user": user}
 
+
 @router.post("/verify/{token}")
-async def verify_user(token:str):
+async def verify_user(token: str) -> None:
     tokenData = decode_url_safe_token(token)
     user_email = tokenData.get("email")
-    
+
     if user_email:
         user = await get_user(user_email)
         if user:
             user_collection = await config.db.get_collection(CollectionRef.USERS)
 
             user.account_verified = True
-            await user_collection.update_one({UserRef.ID: user.id}, {"$set": user.model_dump_safe()})
+            await user_collection.update_one(
+                {UserRef.ID: user.id}, {"$set": user.model_dump_safe()}
+            )
 
             return {"message": "User email has been successfully verified"}
