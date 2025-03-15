@@ -9,3 +9,4 @@ class UserRef(StrEnum):
     PREFERENCES = "preferences"
     HASHED_PASSWORD = "hashed_password"
     DISABLED = "disabled"
+    ACCOUNT_VERIFIED = "account_verified"
