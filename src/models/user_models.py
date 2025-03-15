@@ -9,5 +9,6 @@ class UserDto(DBRecord):
     id: Optional[str] = None
     name: str
     email: str
+    calender_ics_link: Optional[str] = None
     hashed_password: Optional[str] = None
     disabled: bool = False
