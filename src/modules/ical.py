@@ -27,7 +27,7 @@ class Calendar:
         async with aiohttp.ClientSession() as session:
             try:
                 resp = await session.get(self._URL)
-            except aiohttp.client_exceptions.ClientConnectorError:
+            except aiohttp.client_exceptions.InvalidUrlClientError:
                 return False
 
             if resp.status == 200:
