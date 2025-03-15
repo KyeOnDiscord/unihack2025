@@ -56,7 +56,7 @@ async def create_room(
     return {"message": "Room created", "room": room.model_dump()}
 
 
-@router.post("/{room_id}/join")
+@router.post("/{room_code}/join")
 async def join_room(
     current_user: Annotated[UserDto, Depends(get_current_active_user)],
     room_code: str,
