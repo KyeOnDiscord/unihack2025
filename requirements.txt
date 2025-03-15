@@ -11,4 +11,4 @@ PyYAML==6.0.2
 uvicorn==0.34.0
 requests==2.32.3
 icalendar==6.1.1
-fastapi_mail==0.1.1
+fastapi_mail==1.4.2
