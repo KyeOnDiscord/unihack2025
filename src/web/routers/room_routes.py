@@ -1,6 +1,7 @@
 # Handle creating rooms, getting room info, getting room code, getting users to
 # join groups by code, etc.
 import asyncio
+from datetime import datetime
 import logging
 import uuid
 from typing import Annotated
@@ -137,9 +138,55 @@ async def get_room_calenders(room_id: str) -> dict:
 
     await asyncio.gather(*fetch_tasks)
 
-    free_times = {}  # Keep it the same structure as calender_events above.
-    for calender in user_calendars.values():
-        ...
+    start_end_times = []
+    for user_id, calender in user_calendars.items():
+        for event in calender["calender_events"]:
+            start_end_times.append({
+                "user_id": user_id,
+                "type": "start",
+                "time": datetime.fromtimestamp(event["start_time_iso"])}
+            )
+            start_end_times.append({
+                "user_id": user_id,
+                "type": "end",
+                "time": datetime.fromtimestamp(event["end_time_iso"])}
+            )
+
+    start_end_times.sort(key=lambda x: (x["time"], 1 if x["type"] == "start" else 0))
+
+    free_times_by_time = {}
+    current_free_users = []
+    for start_end in start_end_times:
+        if start_end["type"] == "end":
+            # User has no class, is free.
+            if start_end["user_id"] not in current_free_users:
+                current_free_users.append(start_end["user_id"])
+        elif start_end["type"] == "start":
+            # User has class, no longer free.
+            if start_end["user_id"] in current_free_users:
+                i = current_free_users.index(start_end["user_id"])
+                current_free_users.pop(i)
+        
+        free_times_by_time[start_end["time"].timestamp()] = current_free_users.copy()
+
+    free_times_order = sorted(free_times_by_time.keys())
+
+    free_times = [] # Same format as calender_events
+    for i, time_ in enumerate(free_times_order[:-1]):
+        free_users = free_times_by_time[time_]
+        if len(free_users) < 2:
+            continue
+
+        start_time = datetime.fromtimestamp(time_)
+        end_time = datetime.fromtimestamp(free_times_order[i+1])
+
+        free_times.append({
+            "summary": "Free time",
+            "start_time_iso": start_time,
+            "end_time_iso": end_time,
+            "duration_seconds": (start_time - end_time).seconds,
+            "free_users": free_users
+        })
 
     return {
         "message": "Schedules synced",
