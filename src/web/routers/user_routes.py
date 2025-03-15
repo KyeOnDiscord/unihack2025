@@ -5,11 +5,19 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+import jwt
+import os
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
 import config
 from models.user_models import UserDto
 from modules.db import CollectionRef, UserRef
 from web.auth import require_api_key
 from web.user_auth import get_password_hash
+
+from itsdangerous import URLSafeTimedSerializer
+from modules.mail import mail, create_message
 
 _log = logging.getLogger("uvicorn")
 router = APIRouter(
@@ -44,6 +52,25 @@ async def get_user_by_email(email: str) -> dict:
     else:
         return user
 
+serializer = URLSafeTimedSerializer(
+    secret_key=SECRET_KEY, salt="email-verification"
+)
+
+def create_url_safe_token(data: dict):
+
+
+    token = serializer.dumps(data)
+
+    return token
+
+def decode_url_safe_token(token: str):
+    try:
+        token_data = serializer.loads(token)
+
+        return token_data
+    except Exception as e:
+        logging.error(str(e))
+
 
 # NOTE: A follow-up POST users/account/reset-password must be sent.
 @router.post("/")
@@ -55,6 +82,8 @@ async def register_user(user: UserDto) -> dict:
     #         status_code=status.HTTP_400_BAD_REQUEST,
     #         detail="User with the same id already exists",
     #     )
+
+
     if await user_collection.find_one({UserRef.EMAIL: user.email}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -63,6 +92,24 @@ async def register_user(user: UserDto) -> dict:
 
     random_password = "".join(random.choices(string.ascii_letters, k=32))
     user.hashed_password = get_password_hash(random_password)
+
+        # send the email verification to the user
+        #user.email
+
+    link = "http://localhost:3000/verify"
+    token = create_url_safe_token({"email": user.email})
+    html_messsage = f"""
+    <h1>Verify your Email</h1>
+    <p>Please click the <a href="{link}">link</a> below to verify your email address</p>
+    """
+
+    await mail.send_message(
+        create_message(
+            recipients=[user["email"]],
+            subject="Verify your email",
+            body=html_messsage,
+        )
+    )
 
     await user_collection.insert_one(user.model_dump())
 
