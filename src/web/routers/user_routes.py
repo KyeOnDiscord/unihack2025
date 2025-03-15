@@ -125,6 +125,6 @@ async def verify_user(token:str):
             user_collection = await config.db.get_collection(CollectionRef.USERS)
 
             user.account_verified = True
-            await user_collection.update_one({UserRef.ACCOUNT_VERIFIED: user.account_verified}, {"$set": user.model_dump_safe()})
+            await user_collection.update_one({UserRef.ID: user.id},{"$set": {UserRef.ACCOUNT_VERIFIED: True}})
 
             return {"message": "User email has been successfully verified"}
