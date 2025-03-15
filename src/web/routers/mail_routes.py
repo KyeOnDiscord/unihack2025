@@ -31,8 +31,6 @@ async def send_mail(user_id: str):
         )
     else:
         # valid user can send email
-        print('a')
-        print(user)
         await mail.send_message(
             create_message(
                 recipients=[user["email"]],
