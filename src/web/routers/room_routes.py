@@ -26,7 +26,7 @@ router = APIRouter(
 MAX_USERS_PER_ROOM = 10
 
 
-@router.get("/{room_id}")
+@router.get("/{room_id}/get")
 async def get_room(room_id: str) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
 

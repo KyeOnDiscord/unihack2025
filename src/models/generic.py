@@ -39,6 +39,7 @@ class DBRecord(BaseModel):
     def model_validate(cls, *args, **kwargs) -> Self:
         kwargs["obj"] = args[0] if len(args) > 0 else kwargs.get("obj", {})
 
-        kwargs["obj"]["id"] = kwargs["obj"].pop("_id")
+        if kwargs["obj"]:
+            kwargs["obj"]["id"] = kwargs["obj"].pop("_id")
 
         return super().model_validate(**kwargs)
