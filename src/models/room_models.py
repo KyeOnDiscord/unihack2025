@@ -7,4 +7,5 @@ from typing import Optional, List
 class RoomDto(DBRecord):
     id: Optional[str] = None
     name: str
+    owner_id: str
     users: List[str] = []
