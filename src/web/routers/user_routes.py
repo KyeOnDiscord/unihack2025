@@ -2,13 +2,9 @@ import logging
 import random
 import string
 import uuid
-
-from fastapi import APIRouter, Depends, HTTPException, status
-
-import jwt
 import os
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+from fastapi import APIRouter, Depends, HTTPException, status
 
 import config
 from models.user_models import UserDto
@@ -18,6 +14,8 @@ from web.user_auth import get_password_hash
 
 from itsdangerous import URLSafeTimedSerializer
 from modules.mail import mail, create_message
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 _log = logging.getLogger("uvicorn")
 router = APIRouter(
