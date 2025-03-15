@@ -11,7 +11,7 @@ from web.user_auth import get_current_active_user
 
 _log = logging.getLogger("uvicorn")
 router = APIRouter(
-    prefix="/calender",
+    prefix="/users/calender",
     tags=["calender"],
 )
 
