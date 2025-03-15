@@ -13,3 +13,4 @@ requests==2.32.3
 icalendar==6.1.1
 fastapi_mail==1.4.2
 itsdangerous==2.2.0
+groq=0.19.0

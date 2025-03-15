@@ -7,6 +7,8 @@ import random
 import string
 import uuid
 from typing import Annotated
+from groq import Groq
+from collections import Counter
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -219,6 +221,7 @@ async def get_room_calenders(
 
         start_time = datetime.fromtimestamp(time_)
         end_time = datetime.fromtimestamp(free_times_order[i + 1])
+        
 
         free_times.append(
             {
@@ -230,7 +233,6 @@ async def get_room_calenders(
                     user_id: users[user_id]
                     for user_id in free_users
                 },
-                "ai_suggestion": "placeholder"
             }
         )
 
@@ -251,3 +253,54 @@ async def get_user_rooms(
     async for room in room_collection.find({"users": current_user.id}):
         rooms.append(room)
     return {"message": "User rooms fetched", "rooms": rooms}
+
+
+@router.get("{room_id}/preference")
+async def get_common_interests(
+    room_id: str
+) -> dict:
+    room_collection = await config.db.get_collection(CollectionRef.ROOMS)
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
+    if room is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Room not found",
+        )
+    
+    user_interests = {}
+    users = {}
+
+    async def fetch_user_preferences(user_id: str) -> None:
+        user = await get_user(user_id)
+        users[user.id] = user
+        if user and user.preferences:
+            user_interests[user.id] = user.preferences
+    
+    fetch_tasks = [fetch_user_preferences(user_id) for user_id in room.users]
+    await asyncio.gather(*fetch_tasks)
+
+    all_interests = [interest for interests in user_interests.values() for interest in interests]
+    interest_counter = Counter(all_interests)
+    highest_count = max(interest_counter.values(), default=0)
+    biggest_interest = [interest for interest, count in interest_counter.items() if count == highest_count]
+    chosen_interest = biggest_interest[0] if biggest_interest else "Casual Meetup"
+
+    #Groq
+    client = Groq(api_key="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")
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy this activity for a group of individuals: {chosen_interest}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
+            }
+        ],
+        model="llama-3.3-70b-versatile",
+        stream=False,
+    )
+    suggested_location = chat_completion.choices[0].message.content.strip()
+
+    return {
+        "message": "Common interests determined",
+        "common_interest": chosen_interest,
+        "suggested_location": suggested_location,
+    }

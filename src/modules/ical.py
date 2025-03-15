@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import aiohttp.client_exceptions
 import icalendar  # https://icalendar.readthedocs.io/en/latest/
 
 from typing import List
