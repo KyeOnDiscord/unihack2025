@@ -2,11 +2,11 @@
 # e.g. The user itself, maybe user settings (if separated) etc.
 
 from .generic import DBRecord
-
+from typing import Optional
 
 class UserDto(DBRecord):
-    id: str
+    id: Optional[str] = None
     name: str
     email: str
-    hashed_password: str
+    hashed_password: Optional[str] = None
     disabled: bool = False
