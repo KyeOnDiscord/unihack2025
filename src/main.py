@@ -5,6 +5,7 @@ import yaml
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from typing import TYPE_CHECKING
 
 import config
@@ -19,6 +20,15 @@ app = FastAPI()
 config.app = app
 _log = logging.getLogger("uvicorn")
 load_dotenv()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # This enables CORS for all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_CONFIG_DIR = os.path.join(BASE_DIR, "configs", "app_config.yaml")
@@ -41,9 +51,10 @@ def _import_routers() -> None:
             continue
 
         relative_dir = ROUTERS_DIR.replace(BASE_DIR, "")[1:]
-        module = importlib.import_module(
-            f"{relative_dir.replace('\\', '.')}.{filename[:-3]}"
-        )
+        
+        module_path = relative_dir.replace(os.path.sep, ".") + "." + filename[:-3]
+
+        module = importlib.import_module(module_path)
         if hasattr(module, "router"):
             router: APIRouter = getattr(module, "router")
             app.include_router(router)
