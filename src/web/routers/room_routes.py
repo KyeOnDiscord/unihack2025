@@ -10,7 +10,7 @@ from typing import Annotated
 from groq import Groq
 from collections import Counter
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 import config
 from models.room_models import RoomDto
@@ -255,9 +255,10 @@ async def get_user_rooms(
     return {"message": "User rooms fetched", "rooms": rooms}
 
 
-@router.get("{room_id}/preference")
+@router.get("/preference")
 async def get_common_interests(
-    user_ids: dict, event_time: str
+    user_ids: Annotated[list[str], Query(..., alias="user_ids")], 
+    event_time: Annotated[str, Query(..., alias="event_time")]
 ) -> dict:
     user_interests = {}
     users = {}
