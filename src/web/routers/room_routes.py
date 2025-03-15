@@ -141,9 +141,11 @@ async def get_room_calenders(
         )
 
     user_calendars = {}
+    users = {}
 
     async def fetch_user_calender(user_id: str) -> None:
         user = await get_user(user_id)
+        users[user.id] = user
 
         if not user:
             return
@@ -224,7 +226,11 @@ async def get_room_calenders(
                 "start_time_iso": start_time,
                 "end_time_iso": end_time,
                 "duration_seconds": (start_time - end_time).seconds,
-                "free_users": free_users,
+                "free_users": {
+                    user_id: users[user_id]
+                    for user_id in free_users
+                },
+                "ai_suggestion": "placeholder"
             }
         )
 
