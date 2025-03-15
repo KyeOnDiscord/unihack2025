@@ -154,7 +154,8 @@ async def get_room_calenders(
             return
 
         calender = Calendar(user.calender_ics_link)
-        await calender.fetch_calendar()
+        if not await calender.fetch_calendar():
+            return
 
         user_calendars[user.id] = {
             "user": user.model_dump(),

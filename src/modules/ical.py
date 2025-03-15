@@ -22,10 +22,13 @@ class Calendar:
         self._calendar = None
         self.events: List[Event] = []
 
-    async def fetch_calendar(self) -> None:
+    async def fetch_calendar(self) -> bool:
         """Executes a GET request to get the calendar"""
         async with aiohttp.ClientSession() as session:
-            resp = await session.get(self._URL)
+            try:
+                resp = await session.get(self._URL)
+            except aiohttp.client_exceptions.InvalidUrlClientError:
+                return False
 
             if resp.status == 200:
                 self._calendar = icalendar.Calendar.from_ical(await resp.text())
@@ -34,6 +37,8 @@ class Calendar:
                     self.events.append(Event(event))
             else:
                 raise ValueError(f"Could not get calendar, HTTP Error {resp.status}")
+        
+        return True
 
 
 async def main():
