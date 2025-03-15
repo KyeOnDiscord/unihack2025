@@ -88,8 +88,9 @@ async def leave_room(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User not in room",
         )
-    await room_collection.update_one(
-        {RoomRef.ID: room_id}, {"$pull": {"users": current_user.id}}
+    room["users"].remove(current_user.id)
+    await room_collection.replace_one(
+        {RoomRef.ID: room_id}, room
     )
     return {"message": "User removed from room"}
 
