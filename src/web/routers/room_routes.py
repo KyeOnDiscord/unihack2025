@@ -40,7 +40,7 @@ async def create_room(
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
     room.id = str(uuid.uuid4())
-    room.users = []
+    room.users = [current_user.id]
     await room_collection.insert_one(room.model_dump())
     _log.info(f"Room {room.id} created")
     return {"message": "Room created", "room": room, "owner_id": current_user.id}
