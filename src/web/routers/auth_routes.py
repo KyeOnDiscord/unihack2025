@@ -73,3 +73,29 @@ async def login_for_access_token(
         data={"sub": user.id}, expires_delta=access_token_expires
     )
     return TokenDto(access_token=access_token, token_type="bearer")
+
+
+
+@router.delete("/")
+async def delete_user(user: Annotated[UserDto, Depends(get_current_active_user)],):
+    user_collection = await config.db.get_collection(CollectionRef.USERS)
+    deleted = None
+    if user.id:
+        deleted = await user_collection.delete_one({UserRef.ID: user.id})
+    elif user.email:
+        deleted = await user_collection.delete_one({UserRef.ID: user.email})
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User ID or Email was not specified",
+        )
+        
+    if deleted.deleted_count > 0:
+        _log.info(f"Deleted user {user.id}")
+        return {"message": f"Deleted user {user.id}"}
+    else:
+        _log.info(f"User {user.id} could not be deleted because it does not exist")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User {user.id} could not be deleted because it does not exist",
+        )
