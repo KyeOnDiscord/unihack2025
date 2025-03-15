@@ -19,6 +19,7 @@ from web.user_auth import (
     create_access_token,
     get_current_active_user,
     get_password_hash,
+    get_user,
 )
 
 _log = logging.getLogger("uvicorn")
@@ -41,7 +42,8 @@ async def reset_password(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
-    user = await user_collection.find_one({UserRef.ID: form_data.username})
+    user = await get_user(form_data.username)
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

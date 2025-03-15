@@ -19,10 +19,23 @@ router = APIRouter(
 )
 
 
-@router.get("/{user_id}")
-async def get_user(user_id: str) -> dict:
+@router.get("/by-uuid/{user_id}")
+async def get_user_by_uuid(user_id: str) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
     user = await user_collection.find_one({UserRef.ID: user_id})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    else:
+        return user
+
+
+@router.get("/by-email/{email}")
+async def get_user_by_email(email: str) -> dict:
+    user_collection = await config.db.get_collection(CollectionRef.USERS)
+    user = await user_collection.find_one({UserRef.EMAIL: email})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

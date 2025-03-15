@@ -38,8 +38,7 @@ async def get_room(room_id: str) -> dict:
 
 @router.post("/")
 async def create_room(
-    current_user: Annotated[UserDto, Depends(get_current_active_user)],
-    room: RoomDto
+    current_user: Annotated[UserDto, Depends(get_current_active_user)], room: RoomDto
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
     room.id = str(uuid.uuid4())
@@ -69,8 +68,7 @@ async def join_room(
             detail="Room is full (max 10 users)",
         )
     await room_collection.update_one(
-        {RoomRef.ID: room_id},
-        {"$push": {"users": current_user.id}}
+        {RoomRef.ID: room_id}, {"$push": {"users": current_user.id}}
     )
     return {"message": "User added to room"}
 
@@ -93,8 +91,7 @@ async def leave_room(
             detail="User not in room",
         )
     await room_collection.update_one(
-        {RoomRef.ID: room_id},
-        {"$pull": {"users": current_user.id}}
+        {RoomRef.ID: room_id}, {"$pull": {"users": current_user.id}}
     )
     return {"message": "User removed from room"}
 
