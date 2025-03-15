@@ -17,7 +17,7 @@ from modules.db import CollectionRef, UserRef
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 43800 # one month
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -34,7 +34,9 @@ def get_password_hash(password: str | bytes) -> str:
 
 async def get_user(id: str) -> None | UserDto:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
-    user = await user_collection.find_one({UserRef.ID: id})
+    user = await user_collection.find_one({UserRef.EMAIL: id})
+    if user is None:
+        user = await user_collection.find_one({UserRef.ID: id})
 
     if user is not None:
         return UserDto.model_validate(user)

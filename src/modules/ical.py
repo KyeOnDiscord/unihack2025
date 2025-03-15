@@ -1,6 +1,8 @@
-from typing import List
-import requests
+import aiohttp
+import asyncio
 import icalendar  # https://icalendar.readthedocs.io/en/latest/
+
+from typing import List
 from icalendar import Event as _cal_event
 
 
@@ -19,21 +21,29 @@ class Calendar:
         self._calendar = None
         self.events: List[Event] = []
 
-    def fetch_calendar(self) -> None:
+    async def fetch_calendar(self) -> None:
         """Executes a GET request to get the calendar"""
-        resp = requests.get(self._URL)
-        if resp.ok:
-            self._calendar = icalendar.Calendar.from_ical(resp.content)
+        async with aiohttp.ClientSession() as session:
+            resp = await session.get(self._URL)
+        
+        if resp.status == 200:
+            self._calendar = icalendar.Calendar.from_ical(await resp.text())
             self.events.clear()  # Clear the events to put the new ones in
             for event in self._calendar.events:
                 self.events.append(Event(event))
         else:
-            raise ValueError(f"Could not get calendar, HTTP Error {resp.status_code}")
+            raise ValueError(f"Could not get calendar, HTTP Error {resp.status}")
 
 
-# calendar_url = "https://my-timetable.monash.edu/odd/rest/calendar/ical/c392fe27-66ce-4992-ba42-09f18e2ea455"
 
-# cal = Calendar(calendar_url)
-# cal.fetch_calendar()
-# for event in cal.events:
-#     print(event.summary)
+async def main():
+    calendar_url = "https://my-timetable.monash.edu/odd/rest/calendar/ical/c392fe27-66ce-4992-ba42-09f18e2ea455"
+
+    cal = Calendar(calendar_url)
+    await cal.fetch_calendar()
+    for event in cal.events:
+        print(event.summary)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

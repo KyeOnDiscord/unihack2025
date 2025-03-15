@@ -19,6 +19,7 @@ from web.user_auth import (
     create_access_token,
     get_current_active_user,
     get_password_hash,
+    get_user,
 )
 
 _log = logging.getLogger("uvicorn")
@@ -41,13 +42,14 @@ async def reset_password(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
-    user = await user_collection.find_one({UserRef.ID: form_data.username})
+    user = await get_user(form_data.username)
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     hashed_password = get_password_hash(form_data.password)
     await user_collection.update_one(
         {UserRef.ID: form_data.username},
@@ -75,9 +77,10 @@ async def login_for_access_token(
     return TokenDto(access_token=access_token, token_type="bearer")
 
 
-
 @router.delete("/")
-async def delete_user(user: Annotated[UserDto, Depends(get_current_active_user)],):
+async def delete_user(
+    user: Annotated[UserDto, Depends(get_current_active_user)],
+):
     user_collection = await config.db.get_collection(CollectionRef.USERS)
     deleted = None
     if user.id:
@@ -89,7 +92,7 @@ async def delete_user(user: Annotated[UserDto, Depends(get_current_active_user)]
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User ID or Email was not specified",
         )
-        
+
     if deleted.deleted_count > 0:
         _log.info(f"Deleted user {user.id}")
         return {"message": f"Deleted user {user.id}"}

@@ -26,11 +26,11 @@ class DBRecord(BaseModel):
         dump["_id"] = self.id
 
         return dump
-    
+
     @override
     @classmethod
     def model_validate(cls, *args, **kwargs) -> Self:
-        kwargs["obj"] = (args[0] if len(args) > 0 else kwargs.get("obj", {}))
+        kwargs["obj"] = args[0] if len(args) > 0 else kwargs.get("obj", {})
 
         kwargs["obj"]["id"] = kwargs["obj"].pop("_id")
 

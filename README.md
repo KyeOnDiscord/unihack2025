@@ -10,7 +10,7 @@ People can put their hobbies and interests on their profile, and AI can suggest 
 0. (Optional step) Set up a virtual environment using `python3 -m venv .venv`. If using VSCode, accept using the new Python interpreter or otherwise ctrl+P and then `>Python: Select Interpreter` and choose the one located at `.\.venv`.
 1. Install the dependencies using `pip install -r requirements.txt`.
 2. Additionally install `pip install "fastapi[standard]" separately. This is not included in a production build.
-3. Run the application using `fastpi dev src/main.py`.
+3. Run the application using `fastapi dev src/main.py`.
 4. Any new changes after using something like ctrl+S will reload and re-run the project automatically.
 
 ## Notes
