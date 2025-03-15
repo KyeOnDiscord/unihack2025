@@ -7,12 +7,7 @@ from .collections import CollectionRef
 from .users import UserRef
 from .rooms import RoomRef
 
-__all__ = [
-    "get_db",
-    "UserRef",
-    "CollectionRef",
-    "RoomRef"
-]
+__all__ = ["get_db", "UserRef", "CollectionRef", "RoomRef"]
 
 _log = logging.getLogger("uvicorn")
 
