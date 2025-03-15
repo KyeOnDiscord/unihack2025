@@ -274,10 +274,6 @@ async def get_common_interests(
     await asyncio.gather(*fetch_tasks)
 
     all_interests = [interest for interests in user_interests.values() for interest in interests]
-    interest_counter = Counter(all_interests)
-    highest_count = max(interest_counter.values(), default=0)
-    biggest_interest = [interest for interest, count in interest_counter.items() if count == highest_count]
-    chosen_interest = biggest_interest[0] if biggest_interest else "Casual Meetup"
 
     #Groq
     client = Groq(api_key="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")
@@ -285,7 +281,7 @@ async def get_common_interests(
         messages=[
             {
                 "role": "user",
-                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy this activity for a group of individuals: {chosen_interest} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
+                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy one of these activities for a group of individuals: {', '.join(all_interests)} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
             }
         ],
         model="llama-3.3-70b-versatile",
@@ -295,6 +291,6 @@ async def get_common_interests(
 
     return {
         "message": "Common interests determined",
-        "common_interest": chosen_interest,
+        "all_interests": all_interests,
         "suggested_location": suggested_location,
     }
