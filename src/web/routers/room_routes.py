@@ -111,3 +111,13 @@ async def sync_calendars(room_id: str) -> dict:
         if user and "calender" in user:
             user_calendars.append(user["calendar"])
         return {"message": "Schedules synced", "schedules": user_calendars}
+
+@router.get("/my-rooms")
+async def get_user_rooms(
+    current_user: Annotated[UserDto, Depends(get_current_active_user)]
+) -> dict:
+    room_collection = await config.db.get_collection(CollectionRef.ROOMS)
+    rooms = []
+    async for room in room_collection.find({"users": current_user.id}):
+        rooms.append(room)
+    return {"message": "User rooms fetched", "rooms": rooms}
