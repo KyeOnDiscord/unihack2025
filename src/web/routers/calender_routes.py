@@ -18,8 +18,9 @@ router = APIRouter(
 @router.post("/")
 async def upload_calender(
     current_user: Annotated[UserDto, Depends(get_current_active_user)],
-    calender_ics: Annotated[bytes, File()],
+    calender_ics_link: str,
 ) -> dict:
-    ...
+
+    current_user['']
 
     return {"message": "Calender uploaded"}

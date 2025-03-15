@@ -10,14 +10,12 @@ import config
 from models.room_models import RoomDto
 from models.user_models import UserDto
 from modules.db import CollectionRef, RoomRef
-from web.auth import require_api_key
 from web.user_auth import get_current_active_user
 
 _log = logging.getLogger("uvicorn")
 router = APIRouter(
     prefix="/rooms",
     tags=["rooms"],
-    dependencies=[Depends(require_api_key)],
 )
 
 MAX_USERS_PER_ROOM = 10
