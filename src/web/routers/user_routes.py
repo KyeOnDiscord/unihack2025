@@ -105,7 +105,7 @@ async def register_user(user: UserDto) -> dict:
 
     await mail.send_message(
         create_message(
-            recipients=[user["email"]],
+            recipients=[user.email],
             subject="Verify your email",
             body=html_messsage,
         )
