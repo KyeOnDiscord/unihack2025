@@ -6,6 +6,13 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+import jwt
+import os
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+from web.user_auth import get_user
+
 import config
 from models.user_models import UserDto
 from modules.db import CollectionRef, UserRef
@@ -93,9 +100,8 @@ async def register_user(user: UserDto) -> dict:
 
         # send the email verification to the user
         #user.email
-
-    link = "http://localhost:3000/verify"
     token = create_url_safe_token({"email": user.email})
+    link = "http://localhost:3003/verify/" + token
     html_messsage = f"""
     <h1>Verify your Email</h1>
     <p>Please click the <a href="{link}">link</a> below to verify your email address</p>
@@ -114,3 +120,21 @@ async def register_user(user: UserDto) -> dict:
     _log.info(f"User {user.id} created")
 
     return {"message": "User created", "user": user}
+
+@router.post("/verify/{token}")
+async def verify_user(token:str):
+    tokenData = decode_url_safe_token(token)
+    print("user clicked the link")
+    user_email = tokenData.get("email")
+    
+    if user_email:
+        print("user email found")
+        user = get_user(user_email)
+        if user:
+            user_collection = await config.db.get_collection(CollectionRef.USERS)
+
+            user.account_verified = True
+            await user_collection.update_one({UserRef.ACCOUNT_VERIFIED: user.account_verified}, {"$set": user.model_dump_safe()})
+
+            return {"message": "User email has been successfully verified"}
+
