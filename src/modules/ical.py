@@ -25,7 +25,7 @@ class Calendar:
         """Executes a GET request to get the calendar"""
         async with aiohttp.ClientSession() as session:
             resp = await session.get(self._URL)
-        
+
             if resp.status == 200:
                 self._calendar = icalendar.Calendar.from_ical(await resp.text())
                 self.events.clear()  # Clear the events to put the new ones in
@@ -33,7 +33,6 @@ class Calendar:
                     self.events.append(Event(event))
             else:
                 raise ValueError(f"Could not get calendar, HTTP Error {resp.status}")
-
 
 
 async def main():
@@ -45,5 +44,5 @@ async def main():
         print(event.summary)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
