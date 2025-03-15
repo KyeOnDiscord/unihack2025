@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 import logging
+import random
 import uuid
 from typing import Annotated
 
@@ -27,14 +28,15 @@ MAX_USERS_PER_ROOM = 10
 @router.get("{room_id}")
 async def get_room(room_id: str) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = await room_collection.find_one({RoomRef.ID: room_id})
+
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
     else:
-        return room
+        return room.model_dump()
 
 
 @router.post("/")
@@ -42,10 +44,12 @@ async def create_room(
     current_user: Annotated[UserDto, Depends(get_current_active_user)], room: RoomDto
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
+
     room.id = str(uuid.uuid4())
     room.users = [current_user.id]
     await room_collection.insert_one(room.model_dump())
     _log.info(f"Room {room.id} created")
+
     return {"message": "Room created", "room": room, "owner_id": current_user.id}
 
 
@@ -55,22 +59,28 @@ async def join_room(
     room_id: str,
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = await room_collection.find_one({RoomRef.ID: room_id})
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
-    if current_user.id in room.get("users", []):
-        return {"message": "User already in room"}
-    if len(room.get("users", [])) >= MAX_USERS_PER_ROOM:
+    
+    if current_user.id in room.users:
+        return HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="User already in room"
+        )
+    
+    if len(room.users) >= MAX_USERS_PER_ROOM:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Room is full (max 10 users)",
         )
     await room_collection.update_one(
-        {RoomRef.ID: room_id}, {"$push": {"users": current_user.id}}
+        {RoomRef.ID: room.id}, {"$push": {"users": current_user.id}}
     )
+
     return {"message": "User added to room"}
 
 
@@ -80,30 +90,50 @@ async def leave_room(
     room_id: str,
 ) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = await room_collection.find_one({RoomRef.ID: room_id})
+
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
         )
-    if current_user.id not in room.get("users", []):
+    elif current_user.id not in room.get("users", []):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User not in room",
         )
-    room["users"].remove(current_user.id)
-    await room_collection.replace_one({RoomRef.ID: room_id}, room)
+    
+    room.users.remove(current_user.id)
+    if room.owner_id == current_user.id:
+        if len(room.users) > 0:
+            room.owner_id = random.choice(room.users)
+        else:
+            # Delete this room
+            await room_collection.delete_one({RoomRef.ID: room_id})
+
+            return {"message": "User left room & room deleted"}
+
+    await room_collection.update_one({RoomRef.ID: room_id}, {'$set': room.model_dump_safe()})
+
     return {"message": "User removed from room"}
 
 
 @router.get("/{room_id}/calenders")
-async def get_room_calenders(room_id: str) -> dict:
+async def get_room_calenders(
+    current_user: Annotated[UserDto, Depends(get_current_active_user)],
+    room_id: str
+) -> dict:
     room_collection = await config.db.get_collection(CollectionRef.ROOMS)
-    room = await room_collection.find_one({RoomRef.ID: room_id})
+    room = RoomDto.model_validate(await room_collection.find_one({RoomRef.ID: room_id}))
     if room is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Room not found",
+        )
+    elif current_user.id not in room.users:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not in the requested room",
         )
 
     user_calendars = {}
@@ -133,7 +163,7 @@ async def get_room_calenders(room_id: str) -> dict:
         }
 
     fetch_tasks = []
-    for user_id in room.get("users", []):
+    for user_id in room.users:
         fetch_tasks.append(fetch_user_calender(user_id))
 
     await asyncio.gather(*fetch_tasks)
