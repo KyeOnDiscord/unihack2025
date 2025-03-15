@@ -4,6 +4,7 @@
 from .generic import DBRecord
 from typing import Optional
 
+
 class UserDto(DBRecord):
     id: Optional[str] = None
     name: str

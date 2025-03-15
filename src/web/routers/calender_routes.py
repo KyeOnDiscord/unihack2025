@@ -20,7 +20,6 @@ async def upload_calender(
     current_user: Annotated[UserDto, Depends(get_current_active_user)],
     calender_ics: Annotated[bytes, File()],
 ) -> dict:
-    
     ...
 
     return {"message": "Calender uploaded"}

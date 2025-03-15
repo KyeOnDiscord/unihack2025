@@ -51,7 +51,7 @@ def _import_routers() -> None:
             continue
 
         relative_dir = ROUTERS_DIR.replace(BASE_DIR, "")[1:]
-        
+
         module_path = relative_dir.replace(os.path.sep, ".") + "." + filename[:-3]
 
         module = importlib.import_module(module_path)

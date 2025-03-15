@@ -36,8 +36,8 @@ async def get_user(user_id: str) -> dict:
 @router.post("/")
 async def register_user(user: UserDto) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
-    user.id = str(uuid.uuid4()) # UUID4 will always be unique
-    # if await user_collection.find_one({UserRef.ID: user.id}): 
+    user.id = str(uuid.uuid4())  # UUID4 will always be unique
+    # if await user_collection.find_one({UserRef.ID: user.id}):
     #     raise HTTPException(
     #         status_code=status.HTTP_400_BAD_REQUEST,
     #         detail="User with the same id already exists",
@@ -47,7 +47,7 @@ async def register_user(user: UserDto) -> dict:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with the same email already exists",
         )
-    
+
     random_password = "".join(random.choices(string.ascii_letters, k=32))
     user.hashed_password = get_password_hash(random_password)
 
