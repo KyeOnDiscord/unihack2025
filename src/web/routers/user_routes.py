@@ -1,6 +1,7 @@
 import logging
 import random
 import string
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -35,13 +36,13 @@ async def get_user(user_id: str) -> dict:
 @router.post("/")
 async def register_user(user: UserDto) -> dict:
     user_collection = await config.db.get_collection(CollectionRef.USERS)
-
-    if await user_collection.find_one({UserRef.ID: user.id}):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with the same id already exists",
-        )
-    elif await user_collection.find_one({UserRef.EMAIL: user.email}):
+    user.id = str(uuid.uuid4()) # UUID4 will always be unique
+    # if await user_collection.find_one({UserRef.ID: user.id}): 
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="User with the same id already exists",
+    #     )
+    if await user_collection.find_one({UserRef.EMAIL: user.email}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with the same email already exists",
