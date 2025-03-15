@@ -91,7 +91,7 @@ async def register_user(user: UserDto) -> dict:
     # send the email verification to the user
     # user.email
     token = create_url_safe_token({"email": user.email})
-    link = "http://localhost:3003/verify/" + token
+    link = "http://localhost:3000/verify/" + token
     html_messsage = f"""
     <h1>Verify your Email</h1>
     <p>Please click the <a href="{link}">link</a> below to verify your email address</p>
