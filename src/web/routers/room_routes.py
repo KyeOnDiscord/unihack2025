@@ -288,7 +288,7 @@ async def get_common_interests(
         messages=[
             {
                 "role": "user",
-                "content": f"Can you give me a location and activity on the Monash Clayton Campus in Melbourne, Victoria that can satisfy one of these activities for a group of individuals: {', '.join(all_interests)} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
+                "content": f"Can you give me a location and activity on the Monash Clayton Campus in Melbourne, Victoria that can satisfy one of these activities for a group of individuals: {', '.join(all_interests)} at the time {event_time}. Make sure that the information you give is ONLY the location and the activity to do and not any more details, just give the location and activity in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area. Some suggestions are badminton courts, basketball courts, gym, MEGA Gaming lounge in the Campus centre basement, The Arcade which has 'billiard tables, foosball, dartboards, air hockey, video games' at the sports facility.",
             }
         ],
         model="llama-3.3-70b-versatile",
