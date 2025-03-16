@@ -270,6 +270,8 @@ async def get_common_interests(
 
     async def fetch_user_preferences(user_id: str) -> None:
         user = await get_user(user_id)
+        if not user:
+            return
         users[user.id] = user
         if user and user.preferences:
             user_interests[user.id] = user.preferences
@@ -277,7 +279,8 @@ async def get_common_interests(
     fetch_tasks = [fetch_user_preferences(user_id) for user_id in user_ids]
     await asyncio.gather(*fetch_tasks)
 
-    all_interests = [interest for interests in user_interests.values() for interest in interests]
+    all_interests = [interests for interests in user_interests.values()]
+    print(all_interests)
 
     #Groq
     client = Groq(api_key="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")
@@ -285,7 +288,7 @@ async def get_common_interests(
         messages=[
             {
                 "role": "user",
-                "content": f"Can you give me a location on the Monash Clayton Campus in Melbourne, Victoria that can satisfy one of these activities for a group of individuals: {', '.join(all_interests)} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
+                "content": f"Can you give me a location and activity on the Monash Clayton Campus in Melbourne, Victoria that can satisfy one of these activities for a group of individuals: {', '.join(all_interests)} at the time {event_time}. Make sure that the information you give is ONLY the location and not any more details, just give the location in 2-3 words do not elaborate any further. Also make sure to put the location in quotation marks. Also provide the general location as well that's within the Clayton Campus like the area.",
             }
         ],
         model="llama-3.3-70b-versatile",
